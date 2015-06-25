@@ -36,16 +36,23 @@ type TextTokenIterator struct {
 	buf bytes.Buffer
 }
 
+// NewTextTokenIterator creates and initialises a token iterator over
+// the given input text.
 func NewTextTokenIterator(input []byte) *TextTokenIterator {
 	ti := &TextTokenIterator{}
 	ti.in = input
 	return ti
 }
 
-func NewTextTokenIteratorWithRunningIndex(input []byte, idx int) *TextTokenIterator {
+// NewTextTokenIteratorWithOffset creates and initialises a token
+// iterator over the given input text.
+//
+// It treats the given offset - rather than 0 - as the starting index
+// from which to track all subsequent indices.
+func NewTextTokenIteratorWithOffset(input []byte, n int) *TextTokenIterator {
 	ti := &TextTokenIterator{}
 	ti.in = input
-	ti.idx = idx
+	ti.idx = n
 	return ti
 }
 
