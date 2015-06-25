@@ -7,8 +7,9 @@ import (
 	"unicode"
 )
 
-//
-
+// TextToken represents a piece of text extracted from a larger input.
+// It holds information regarding its beginning and ending offsets in
+// the input text.  A text token may span the entire input.
 type TextToken struct {
 	text  string
 	begin int
@@ -27,8 +28,8 @@ func (tt *TextToken) End() int {
 	return tt.end
 }
 
-//
-
+// TextTokenIterator helps in retrieving consecutive text tokens from
+// an input text.
 type TextTokenIterator struct {
 	in  string
 	ct  *TextToken
@@ -53,8 +54,8 @@ func (ti *TextTokenIterator) Item() Token {
 	return ti.ct
 }
 
-//
-
+// MoveNext is an iterator method towards implementation of the
+// `TokenIterator` interface.
 func (ti *TextTokenIterator) MoveNext() error {
 	inStr := false
 	inNum := false
