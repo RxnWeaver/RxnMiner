@@ -31,6 +31,22 @@ const (
 	TokSentence
 )
 
+var TtDescriptions map[TokenType]string = map[TokenType]string{
+	TokOther:      "TokOther",
+	TokSpace:      "TokSpace",
+	TokLetter:     "TokLetter",
+	TokNumber:     "TokLetter",
+	TokTerm:       "TokTerm",
+	TokPause:      "TokPause",
+	TokGroupOpen:  "TokGroupOpen",
+	TokGroupClose: "TokGroupClose",
+	TokPunct:      "TokPunct",
+	TokSymbol:     "TokSymbol",
+	TokMayBeWord:  "TokMayBeWord",
+	TokWord:       "TokWord",
+	TokSentence:   "TokSentence",
+}
+
 //
 
 func TypeOfRune(r rune) TokenType {
