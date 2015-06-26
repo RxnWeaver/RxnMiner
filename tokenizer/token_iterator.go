@@ -7,6 +7,7 @@ type Token interface {
 	Text() string
 	Begin() int
 	End() int
+	Type() TokenType
 }
 
 // TokenIterator helps in retrieving consecutive tokens.  Side effects
