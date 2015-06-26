@@ -3,7 +3,6 @@ package tokenizer
 import (
 	"bytes"
 	"io"
-	"unicode"
 )
 
 // TextToken represents a piece of text extracted from a larger input.
@@ -13,6 +12,7 @@ type TextToken struct {
 	text  string
 	begin int
 	end   int
+	ttype TokenType
 }
 
 func (tt *TextToken) Text() string {
@@ -25,6 +25,10 @@ func (tt *TextToken) Begin() int {
 
 func (tt *TextToken) End() int {
 	return tt.end
+}
+
+func (tt *TextToken) Type() TokenType {
+	return tt.ttype
 }
 
 // TextTokenIterator helps in retrieving consecutive text tokens from
@@ -68,20 +72,13 @@ func (ti *TextTokenIterator) MoveNext() error {
 	rd := bytes.NewReader(ti.in[ti.idx:])
 	begin, end := ti.idx, ti.idx
 
-loop:
 	for r, n, err := rd.ReadRune(); err == nil; r, n, err = rd.ReadRune() {
-		switch {
-		case r == '.', r == '!', r == '?', unicode.IsSpace(r):
+		tt := TypeOfRune(r)
+		switch tt {
+		case TokTerm, TokPause, TokGroupOpen, TokGroupClose, TokPunct, TokSymbol, TokSpace:
 			{
-				if r == '.' && inNum {
-					ti.buf.WriteRune(r)
-					end += n
-					inNum = false
-					continue loop
-				}
-
 				if ti.buf.Len() > 0 {
-					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1}
+					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1, TokMayBeWord}
 					ti.buf.Reset()
 					ti.idx = end
 					return err
@@ -89,31 +86,15 @@ loop:
 
 				begin = end
 				end = begin + n
-				ti.ct = &TextToken{string(r), begin, end - 1}
+				ti.ct = &TextToken{string(r), begin, end - 1, tt}
 				ti.idx = end
 				return err
 			}
 
-		case unicode.IsPunct(r), unicode.IsSymbol(r):
-			{
-				if ti.buf.Len() > 0 {
-					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1}
-					ti.buf.Reset()
-					ti.idx = end
-					return err
-				}
-
-				begin = end
-				end = begin + n
-				ti.ct = &TextToken{string(r), begin, end - 1}
-				ti.idx = end
-				return err
-			}
-
-		case unicode.IsNumber(r):
+		case TokNumber:
 			{
 				if inStr {
-					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1}
+					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1, TokMayBeWord}
 					ti.buf.Reset()
 					ti.idx = end
 					return err
@@ -124,10 +105,10 @@ loop:
 				inStr = false
 			}
 
-		case unicode.IsLetter(r):
+		case TokLetter:
 			{
 				if inNum {
-					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1}
+					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1, TokMayBeWord}
 					ti.buf.Reset()
 					ti.idx = end
 					return err
@@ -146,7 +127,7 @@ loop:
 	}
 
 	if ti.buf.Len() > 0 {
-		ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1}
+		ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1, TokMayBeWord}
 		ti.buf.Reset()
 		ti.idx = end
 		return nil
