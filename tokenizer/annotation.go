@@ -39,7 +39,7 @@ func NewAnnotation(in string) (*Annotation, error) {
 		return nil, fmt.Errorf("Input does not have 6 columns : %s\n", in)
 	}
 
-	a := new(Annotation)
+	a := &Annotation{}
 	a.DocumentId = fields[0]
 	a.Section = fields[1]
 
