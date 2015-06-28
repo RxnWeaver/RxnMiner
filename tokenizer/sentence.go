@@ -21,7 +21,6 @@ func NewSentence(text string, b int, e int) *Sentence {
 	s.token.begin = b
 	s.token.end = e
 	s.token.ttype = TokSentence
-	s.words = make([]*Word, 4) // TODO(js): May need to tune this later.
 
 	return s
 }

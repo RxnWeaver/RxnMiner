@@ -3,6 +3,7 @@ package tokenizer
 import (
 	"bytes"
 	"io"
+	"strings"
 )
 
 // TextToken represents a piece of text extracted from a larger input.
@@ -34,7 +35,7 @@ func (tt *TextToken) Type() TokenType {
 // TextTokenIterator helps in retrieving consecutive text tokens from
 // an input text.
 type TextTokenIterator struct {
-	in  []byte
+	in  string
 	ct  *TextToken
 	idx int
 	buf bytes.Buffer
@@ -42,7 +43,7 @@ type TextTokenIterator struct {
 
 // NewTextTokenIterator creates and initialises a token iterator over
 // the given input text.
-func NewTextTokenIterator(input []byte) *TextTokenIterator {
+func NewTextTokenIterator(input string) *TextTokenIterator {
 	ti := &TextTokenIterator{}
 	ti.in = input
 	return ti
@@ -53,14 +54,14 @@ func NewTextTokenIterator(input []byte) *TextTokenIterator {
 //
 // It treats the given offset - rather than 0 - as the starting index
 // from which to track all subsequent indices.
-func NewTextTokenIteratorWithOffset(input []byte, n int) *TextTokenIterator {
+func NewTextTokenIteratorWithOffset(input string, n int) *TextTokenIterator {
 	ti := &TextTokenIterator{}
 	ti.in = input
 	ti.idx = n
 	return ti
 }
 
-func (ti *TextTokenIterator) Item() Token {
+func (ti *TextTokenIterator) Item() *TextToken {
 	return ti.ct
 }
 
@@ -69,7 +70,7 @@ func (ti *TextTokenIterator) Item() Token {
 func (ti *TextTokenIterator) MoveNext() error {
 	inStr := false
 	inNum := false
-	rd := bytes.NewReader(ti.in[ti.idx:])
+	rd := strings.NewReader(ti.in[ti.idx:])
 	begin, end := ti.idx, ti.idx
 
 	for r, n, err := rd.ReadRune(); err == nil; r, n, err = rd.ReadRune() {
