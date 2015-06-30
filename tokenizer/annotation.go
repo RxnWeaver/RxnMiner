@@ -45,9 +45,13 @@ func NewAnnotation(in string) (*Annotation, error) {
 
 	if n, err := strconv.Atoi(fields[2]); err == nil {
 		a.Begin = n
+	} else {
+		return nil, err
 	}
 	if n, err := strconv.Atoi(fields[3]); err == nil {
 		a.End = n
+	} else {
+		return nil, err
 	}
 	a.Entity = fields[4]
 
