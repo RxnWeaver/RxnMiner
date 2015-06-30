@@ -12,10 +12,10 @@ func TestEnglish001(t *testing.T) {
 	}
 
 	for _, fn := range files {
-		t.Logf("TEST    : %s", fn)
+		t.Logf("%-8s : %s", "TEST", fn)
 		bs, err := ioutil.ReadFile(fn)
 		if err != nil {
-			t.Fatalf("FATAL   : Input data file '%s' could not be read : %s", fn, err.Error())
+			t.Fatalf("%-8s : Input data file '%s' could not be read : %s", "FATAL", fn, err.Error())
 		}
 
 		size := len(bs)
@@ -27,9 +27,9 @@ func TestEnglish001(t *testing.T) {
 
 		lt := toks[len(toks)-1]
 		if lt.End() != size - 1 {
-			t.Errorf("FAIL    : Token offset drift by EOF.  Expected : %d, observed : %d", size, lt.End())
+			t.Errorf("%-8s : Token offset drift by EOF.  Expected : %d, observed : %d", "FAIL", size, lt.End())
 		}
-		t.Logf("SUCCESS : %s", fn)
+		t.Logf("%-8s : %s", "SUCCESS", fn)
 	}
 }
 
