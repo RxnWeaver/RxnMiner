@@ -1,26 +1,29 @@
 package tokenizer
 
 import (
-	"fmt"
+	"io"
 )
 
-// Sentence represents a logical sentence, with possibly multiple
-// words in it.
+// Sentence represents a logical sentence.
 //
-// It holds information about its constituent words as well.
+// It holds information about its text, its offsets and its
+// constituent text tokens.
 type Sentence struct {
-	token TextToken // Actual text and its properties
-	words []*Word   // Constituent words, possibly just one
+	token   TextToken // Actual text and its properties
+	bTokIdx int       // Index of beginning token of this sentence
+	eTokIdx int       // Index of ending token of this sentence
 }
 
-// NewSentence creates and initialises a sentence with its text and
+// newSentence creates and initialises a sentence with its text and
 // offsets.
-func NewSentence(text string, b int, e int) *Sentence {
+func newSentence(text string, b, e, btok, etok int) *Sentence {
 	s := &Sentence{}
 	s.token.text = text
 	s.token.begin = b
 	s.token.end = e
 	s.token.ttype = TokSentence
+	s.bTokIdx = btok
+	s.eTokIdx = etok
 
 	return s
 }
@@ -41,54 +44,102 @@ func (s *Sentence) Type() TokenType {
 	return s.token.ttype
 }
 
-func (s *Sentence) Words() []*Word {
-	return s.words
+func (s *Sentence) BeginToken() int {
+	return s.bTokIdx
 }
 
-func (s *Sentence) WordCount() int {
-	return len(s.words)
+func (s *Sentence) EndToken() int {
+	return s.eTokIdx
 }
 
-//
+// SentenceIterator helps in assembling consecutive sentences from the
+// underlying text tokens.
+type SentenceIterator struct {
+	toks     []*TextToken
+	cs       *Sentence
+	idx      int
+	buf      string
+	inTerm   bool
+	inTermSp bool
+}
 
-func (s *Sentence) WordAt(idx int) (*Word, error) {
-	if idx > len(s.words) {
-		return nil, fmt.Errorf("Index our of bounds : %d", idx)
+// NewSentenceIterator creates and initialises a sentence iterator
+// over the given text tokens.
+func NewSentenceIterator(toks []*TextToken) *SentenceIterator {
+	si := &SentenceIterator{}
+	si.toks = toks
+	return si
+}
+
+// Item answers the current sentence.
+func (si *SentenceIterator) Item() *Sentence {
+	return si.cs
+}
+
+// MoveNext detects the next sentence formed from the given input
+// tokens, should one be available.  Otherwise, it answers an error
+// describing the problem.
+func (si *SentenceIterator) MoveNext() error {
+	begin, end := si.idx, si.idx
+	size := len(si.toks)
+
+	for end < size {
+		t := si.toks[end]
+		switch t.ttype {
+		case TokSpace:
+			{
+				switch {
+				case si.inTerm: // TODO(js): Handle 'Mr.'/'etc.'/...
+					{
+						si.inTerm = false
+						si.inTermSp = true
+
+						if len(si.buf) > 0 {
+							si.cs = newSentence(si.buf,
+								si.toks[begin].Begin(), si.toks[end].End(),
+								begin, end-1)
+							si.buf = ""
+							si.idx = end
+							return nil
+						}
+
+						end++
+					}
+
+				case si.inTermSp:
+					end++
+					begin = end
+
+				default:
+					si.buf += t.text
+					end++
+				}
+			}
+
+		case TokTerm:
+			si.inTerm = true
+			si.inTermSp = false
+			si.buf += t.text
+			end++
+
+		default:
+			si.inTerm = false
+			si.inTermSp = false
+			si.buf += t.text
+			end++
+		}
 	}
 
-	return s.words[idx], nil
-}
-
-func (s *Sentence) AddWord(w *Word) error {
-	if w == nil {
-		return fmt.Errorf("Given word is nil")
+	if len(si.buf) > 0 {
+		si.cs = newSentence(si.buf,
+			si.toks[begin].Begin(), si.toks[end-1].End(),
+			begin, end)
+		si.buf = ""
+		si.idx = end
+		si.inTerm = false
+		si.inTermSp = false
+		return nil
 	}
 
-	s.words = append(s.words, w)
-	return nil
-}
-
-func (s *Sentence) AddWords(ws []*Word) error {
-	s.words = append(s.words, ws...)
-	return nil
-}
-
-func (s *Sentence) AddWordAt(idx int, w *Word) error {
-	if idx > len(s.words) {
-		return fmt.Errorf("Index our of bounds : %d", idx)
-	}
-
-	t := s.words[idx:]
-	s.words = append(s.words[:idx], w)
-	s.words = append(s.words, t...)
-	return nil
-}
-
-func (s *Sentence) RemoveWordAt(idx int) error {
-	if idx > len(s.words) {
-		return fmt.Errorf("Index our of bounds : %d", idx)
-	}
-
-	s.words = append(s.words[:idx], s.words[idx+1:]...)
-	return nil
+	return io.EOF
 }

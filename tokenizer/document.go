@@ -17,6 +17,7 @@ type Document struct {
 	tokens map[string][]*TextToken
 	words  map[string][]*Word
 	annos  map[string][]*Annotation
+	sents  map[string][]*Sentence
 }
 
 // NewDocument creates and initialises a document with the given
@@ -35,6 +36,7 @@ func NewDocument(id string) (*Document, error) {
 	d.tokens = make(map[string][]*TextToken, 2)
 	d.words = make(map[string][]*Word, 2)
 	d.annos = make(map[string][]*Annotation, 2)
+	d.sents = make(map[string][]*Sentence, 2)
 
 	return d, nil
 }
@@ -131,7 +133,7 @@ func (d *Document) wordForAnnotation(a *Annotation, toks []*TextToken) (*Word, e
 		return nil, fmt.Errorf("Annotation could not be matched : %v", *a)
 	}
 
-	w := NewWord(a.Entity, a.Begin, a.End)
+	w := newWord(a.Entity, a.Begin, a.End)
 	w.etype = a.Type
 	return w, nil
 }

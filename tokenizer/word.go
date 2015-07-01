@@ -14,9 +14,9 @@ type Word struct {
 	etype EntityType // Assigned after learning
 }
 
-// NewWord creates and initialises a word with its properties set to
+// newWord creates and initialises a word with its properties set to
 // reasonable defaults.
-func NewWord(text string, b int, e int) *Word {
+func newWord(text string, b int, e int) *Word {
 	w := &Word{}
 	w.token.text = text
 	w.token.begin = b
