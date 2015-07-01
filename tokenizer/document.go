@@ -7,22 +7,16 @@ import (
 // Document represents the entirety of input text of one logical
 // document -- usually a file.
 //
-// It holds information about its sections.  In case the document has
-// associated training annotations, it holds them as well.
+// It holds information about its sections, tokens in them, and the
+// words that were recognised by other processors.  In case the
+// document has associated training annotations, it holds them as
+// well.
 type Document struct {
-	id       string // Must be unique within a run
-	title    string
-	abstract string
-	body     string
-	tTokens  []*TextToken
-	aTokens  []*TextToken
-	bTokens  []*TextToken
-	tWords   []*Word
-	aWords   []*Word
-	bWords   []*Word
-	tAnnos   []*Annotation
-	aAnnos   []*Annotation
-	bAnnos   []*Annotation
+	id     string // Must be unique within a run
+	input  map[string]string
+	tokens map[string][]*TextToken
+	words  map[string][]*Word
+	annos  map[string][]*Annotation
 }
 
 // NewDocument creates and initialises a document with the given
@@ -38,38 +32,33 @@ func NewDocument(id string) (*Document, error) {
 
 	d := &Document{}
 	d.id = id
+	d.input = make(map[string]string, 2)
+	d.tokens = make(map[string][]*TextToken, 2)
+	d.words = make(map[string][]*Word, 2)
+	d.annos = make(map[string][]*Annotation, 2)
 
 	return d, nil
 }
 
-// SetTitle provides the text of the title of the document.
-func (d *Document) SetTitle(title string) error {
-	if title == "" {
-		return fmt.Errorf("Empty title given")
+// SetInput registers the input text of the given section of the
+// document.
+func (d *Document) SetInput(sec, input string) error {
+	if sec == "" || input == "" {
+		return fmt.Errorf("Empty section name or body given.")
 	}
 
-	d.title = title
+	d.input[sec] = input
 	return nil
 }
 
-// SetAbstract provides the text of the abstract of the document.
-func (d *Document) SetAbstract(abstract string) error {
-	if abstract == "" {
-		return fmt.Errorf("Empty abstract given")
+// Input answers the registered input text of the given section, if
+// one exists.
+func (d *Document) Input(sec string) (string, error) {
+	if s, ok := d.input[sec]; ok {
+		return s, nil
 	}
 
-	d.abstract = abstract
-	return nil
-}
-
-// SetBody provides the text of the body of the document.
-func (d *Document) SetBody(body string) error {
-	if body == "" {
-		return fmt.Errorf("Empty body given")
-	}
-
-	d.body = body
-	return nil
+	return "", fmt.Errorf("No input text for section : %s", sec)
 }
 
 // Tokenize breaks the text in the title, abstract and body into
@@ -82,25 +71,13 @@ func (d *Document) Tokenize() {
 	var ti *TextTokenIterator
 	var err error
 
-	if len(d.title) > 0 {
-		ti = NewTextTokenIterator(d.title)
+	for sec, inp := range d.input {
+		ti = NewTextTokenIterator(inp)
+		var toks []*TextToken
 		for err = ti.MoveNext(); err == nil; err = ti.MoveNext() {
-			d.tTokens = append(d.tTokens, ti.Item())
+			toks = append(toks, ti.Item())
 		}
-	}
-
-	if len(d.abstract) > 0 {
-		ti = NewTextTokenIterator(d.abstract)
-		for err = ti.MoveNext(); err == nil; err = ti.MoveNext() {
-			d.aTokens = append(d.aTokens, ti.Item())
-		}
-	}
-
-	if len(d.body) > 0 {
-		ti = NewTextTokenIterator(d.body)
-		for err = ti.MoveNext(); err == nil; err = ti.MoveNext() {
-			d.bTokens = append(d.bTokens, ti.Item())
-		}
+		d.tokens[sec] = toks
 	}
 }
 
@@ -110,46 +87,28 @@ func (d *Document) Tokenize() {
 // "B" for body.  It creates and stores a `Word` corresponding to the
 // text in the annotation.
 func (d *Document) Annotate(a *Annotation) error {
-	switch a.Section {
-	case "T":
-		if len(d.tTokens) == 0 {
-			return fmt.Errorf("Title is not tokenized, but annotation provided")
-		}
-		w, err := d.wordForAnnotation(a, d.tTokens)
-		if err != nil {
-			return err
-		}
-		d.tWords = append(d.tWords, w)
-		d.tAnnos = append(d.tAnnos, a)
-
-	case "A":
-		if len(d.aTokens) == 0 {
-			return fmt.Errorf("Abstract is not tokenized, but annotation provided")
-		}
-		w, err := d.wordForAnnotation(a, d.aTokens)
-		if err != nil {
-			return err
-		}
-		d.aWords = append(d.aWords, w)
-		d.aAnnos = append(d.aAnnos, a)
-
-	case "B":
-		if len(d.bTokens) == 0 {
-			return fmt.Errorf("Body is not tokenized, but annotation provided")
-		}
-		w, err := d.wordForAnnotation(a, d.bTokens)
-		if err != nil {
-			return err
-		}
-		d.bWords = append(d.bWords, w)
-		d.bAnnos = append(d.bAnnos, a)
-
-	default:
+	toks, ok := d.tokens[a.Section]
+	if !ok {
 		return fmt.Errorf("Annotation for unrecognised section : %s", a.Section)
 	}
 
+	w, err := d.wordForAnnotation(a, toks)
+	if err != nil {
+		return err
+	}
+
+	words := d.words[a.Section]
+	words = append(words, w)
+	d.words[a.Section] = words
+
+	annos := d.annos[a.Section]
+	annos = append(annos, a)
+	d.annos[a.Section] = annos
+
 	return nil
 }
+
+//
 
 func (d *Document) wordForAnnotation(a *Annotation, toks []*TextToken) (*Word, error) {
 	bidx := -1
@@ -177,4 +136,62 @@ func (d *Document) wordForAnnotation(a *Annotation, toks []*TextToken) (*Word, e
 	w := NewWord(a.Entity, a.Begin, a.End)
 	w.etype = a.Type
 	return w, nil
+}
+
+// TokensInSection answers any recognised tokens in the given section.
+func (d *Document) TokensInSection(sec string) []*TextToken {
+	if v, ok := d.tokens[sec]; ok {
+		return v
+	}
+
+	return nil
+}
+
+// SectionTokenCount answers the number of recognised tokens in the
+// given section.
+func (d *Document) SectionTokenCount(sec string) (int, error) {
+	if v, ok := d.tokens[sec]; ok {
+		return len(v), nil
+	}
+
+	return -1, fmt.Errorf("Unknown section : %s", sec)
+}
+
+// WordsInSection answers any recognised words in the given section.
+func (d *Document) WordsInSection(sec string) []*Word {
+	if v, ok := d.words[sec]; ok {
+		return v
+	}
+
+	return nil
+}
+
+// SectionWordCount answers the number of recognised words in the
+// given section.
+func (d *Document) SectionWordCount(sec string) (int, error) {
+	if v, ok := d.words[sec]; ok {
+		return len(v), nil
+	}
+
+	return -1, fmt.Errorf("Unknown section : %s", sec)
+}
+
+// AnnotationsForSection answers the registered annotations for the
+// given section.
+func (d *Document) AnnotationsForSection(sec string) []*Annotation {
+	if v, ok := d.annos[sec]; ok {
+		return v
+	}
+
+	return nil
+}
+
+// SectionAnnotationCount answers the number of registered annotations
+// in the given section.
+func (d *Document) SectionAnnotationCount(sec string) (int, error) {
+	if v, ok := d.annos[sec]; ok {
+		return len(v), nil
+	}
+
+	return -1, fmt.Errorf("Unknown section : %s", sec)
 }

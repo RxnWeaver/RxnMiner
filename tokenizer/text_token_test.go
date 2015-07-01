@@ -26,10 +26,9 @@ func TestEnglish001(t *testing.T) {
 		}
 
 		lt := toks[len(toks)-1]
-		if lt.End() != size - 1 {
+		if lt.End() != size-1 {
 			t.Errorf("%-8s : Token offset drift by EOF.  Expected : %d, observed : %d", "FAIL", size, lt.End())
 		}
 		t.Logf("%-8s : %s", "SUCCESS", fn)
 	}
 }
-
