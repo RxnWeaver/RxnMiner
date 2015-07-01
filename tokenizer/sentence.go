@@ -1,26 +1,27 @@
 package tokenizer
 
 import (
-	"fmt"
+// "fmt"
 )
 
-// Sentence represents a logical sentence, with possibly multiple
-// words in it.
+// Sentence represents a logical sentence.
 //
-// It holds information about its constituent words as well.
+// It holds information about its text, its offsets and its
+// constituent text tokens.
 type Sentence struct {
-	token TextToken // Actual text and its properties
-	words []*Word   // Constituent words, possibly just one
+	token  TextToken    // Actual text and its properties
+	tokens []*TextToken // Constituent text tokens
 }
 
-// NewSentence creates and initialises a sentence with its text and
+// newSentence creates and initialises a sentence with its text and
 // offsets.
-func NewSentence(text string, b int, e int) *Sentence {
+func newSentence(text string, b int, e int, toks []*TextToken) *Sentence {
 	s := &Sentence{}
 	s.token.text = text
 	s.token.begin = b
 	s.token.end = e
 	s.token.ttype = TokSentence
+	s.tokens = append(s.tokens, toks...)
 
 	return s
 }
@@ -41,54 +42,6 @@ func (s *Sentence) Type() TokenType {
 	return s.token.ttype
 }
 
-func (s *Sentence) Words() []*Word {
-	return s.words
-}
-
-func (s *Sentence) WordCount() int {
-	return len(s.words)
-}
-
-//
-
-func (s *Sentence) WordAt(idx int) (*Word, error) {
-	if idx > len(s.words) {
-		return nil, fmt.Errorf("Index our of bounds : %d", idx)
-	}
-
-	return s.words[idx], nil
-}
-
-func (s *Sentence) AddWord(w *Word) error {
-	if w == nil {
-		return fmt.Errorf("Given word is nil")
-	}
-
-	s.words = append(s.words, w)
-	return nil
-}
-
-func (s *Sentence) AddWords(ws []*Word) error {
-	s.words = append(s.words, ws...)
-	return nil
-}
-
-func (s *Sentence) AddWordAt(idx int, w *Word) error {
-	if idx > len(s.words) {
-		return fmt.Errorf("Index our of bounds : %d", idx)
-	}
-
-	t := s.words[idx:]
-	s.words = append(s.words[:idx], w)
-	s.words = append(s.words, t...)
-	return nil
-}
-
-func (s *Sentence) RemoveWordAt(idx int) error {
-	if idx > len(s.words) {
-		return fmt.Errorf("Index our of bounds : %d", idx)
-	}
-
-	s.words = append(s.words[:idx], s.words[idx+1:]...)
-	return nil
+func (s *Sentence) Tokens() []*TextToken {
+	return s.tokens
 }
