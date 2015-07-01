@@ -61,12 +61,13 @@ func NewTextTokenIteratorWithOffset(input string, n int) *TextTokenIterator {
 	return ti
 }
 
+// Item answers the current token.
 func (ti *TextTokenIterator) Item() *TextToken {
 	return ti.ct
 }
 
-// MoveNext is an iterator method towards implementation of the
-// `TokenIterator` interface.
+// MoveNext detects the next token in the input, should one be
+// available.  Otherwise, it answers an error describing the problem.
 func (ti *TextTokenIterator) MoveNext() error {
 	inStr := false
 	inNum := false
