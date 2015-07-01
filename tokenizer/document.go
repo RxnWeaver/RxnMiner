@@ -8,9 +8,9 @@ import (
 // document -- usually a file.
 //
 // It holds information about its sections, tokens in them, and the
-// words that were recognised by other processors.  In case the
-// document has associated training annotations, it holds them as
-// well.
+// words and sentences that were recognised by other processors.  In
+// case the document has associated training annotations, it holds
+// them as well.
 type Document struct {
 	id     string // Must be unique within a run
 	input  map[string]string
@@ -22,9 +22,8 @@ type Document struct {
 // NewDocument creates and initialises a document with the given
 // identifier.
 //
-// It holds information about its sections: currently title, abstract
-// and body.  It also holds information of their constituent words and
-// annotations.
+// It holds information about its sections.  It also holds information
+// of their constituent tokens, words, sentences and annotations.
 func NewDocument(id string) (*Document, error) {
 	if id == "" {
 		return nil, fmt.Errorf("Empty identifier given")
@@ -61,8 +60,8 @@ func (d *Document) Input(sec string) (string, error) {
 	return "", fmt.Errorf("No input text for section : %s", sec)
 }
 
-// Tokenize breaks the text in the title, abstract and body into
-// quasi-atomic tokens.
+// Tokenize breaks the text in the various sections of the document
+// into quasi-atomic tokens.
 //
 // These tokens can be matched against any available annotations.
 // They can also be combined into logical words for named entity
@@ -82,10 +81,9 @@ func (d *Document) Tokenize() {
 }
 
 // Annotate records the given annotation against the applicable
-// sequence of tokens in the appropriate section of the document.
-// Currently known sections are "T" for title, "A" for abstract and
-// "B" for body.  It creates and stores a `Word` corresponding to the
-// text in the annotation.
+// sequence of tokens in the appropriate section of the document.  It
+// creates and stores a `Word` corresponding to the text in the
+// annotation.
 func (d *Document) Annotate(a *Annotation) error {
 	toks, ok := d.tokens[a.Section]
 	if !ok {
