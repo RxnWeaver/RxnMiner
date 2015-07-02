@@ -2,6 +2,7 @@ package tokenizer
 
 import (
 	"io"
+	"unicode"
 )
 
 // Sentence represents a logical sentence.
@@ -58,6 +59,7 @@ type SentenceIterator struct {
 	toks     []*TextToken
 	cs       *Sentence
 	idx      int
+	idxTerm  int
 	buf      string
 	inTerm   bool
 	inTermSp bool
@@ -89,22 +91,10 @@ func (si *SentenceIterator) MoveNext() error {
 		case TokSpace:
 			{
 				switch {
-				case si.inTerm: // TODO(js): Handle 'Mr.'/'etc.'/...
-					{
-						si.inTerm = false
-						si.inTermSp = true
-
-						if len(si.buf) > 0 {
-							si.cs = newSentence(si.buf,
-								si.toks[begin].Begin(), si.toks[end].End(),
-								begin, end-1)
-							si.buf = ""
-							si.idx = end
-							return nil
-						}
-
-						end++
-					}
+				case si.inTerm:
+					si.inTerm = false
+					si.inTermSp = true
+					end++
 
 				case si.inTermSp:
 					end++
@@ -116,17 +106,43 @@ func (si *SentenceIterator) MoveNext() error {
 				}
 			}
 
-		case TokTerm:
+		case TokTerm: // TODO(js): Handle 'Mr.'/'etc.'/...
 			si.inTerm = true
 			si.inTermSp = false
 			si.buf += t.text
+			si.idxTerm = end
 			end++
 
 		default:
-			si.inTerm = false
-			si.inTermSp = false
-			si.buf += t.text
-			end++
+			{
+				if si.inTermSp {
+					var r rune
+					for _, r = range t.text {
+						break
+					}
+					if unicode.IsUpper(r) {
+						si.cs = newSentence(si.buf,
+							si.toks[begin].Begin(), si.toks[si.idxTerm].End(),
+							begin, si.idxTerm)
+						si.buf = ""
+						si.idx = end
+						si.inTerm = false
+						si.inTermSp = false
+						return nil
+					} else {
+						if end > si.idxTerm {
+							for i := si.idxTerm + 1; i < end; i++ {
+								si.buf += si.toks[i].Text()
+							}
+						}
+					}
+				}
+
+				si.inTerm = false
+				si.inTermSp = false
+				si.buf += t.text
+				end++
+			}
 		}
 	}
 
