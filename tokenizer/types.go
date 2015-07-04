@@ -18,10 +18,15 @@ const (
 	TokSpace
 	TokLetter
 	TokNumber
+	TokMayBeTerm
 	TokTerm
 	TokPause
-	TokGroupOpen
-	TokGroupClose
+	TokParenOpen
+	TokParenClose
+	TokBracketOpen
+	TokBracketClose
+	TokBraceOpen
+	TokBraceClose
 	TokPunct
 	TokSymbol
 
@@ -32,19 +37,24 @@ const (
 )
 
 var TtDescriptions map[TokenType]string = map[TokenType]string{
-	TokOther:      "TokOther",
-	TokSpace:      "TokSpace",
-	TokLetter:     "TokLetter",
-	TokNumber:     "TokLetter",
-	TokTerm:       "TokTerm",
-	TokPause:      "TokPause",
-	TokGroupOpen:  "TokGroupOpen",
-	TokGroupClose: "TokGroupClose",
-	TokPunct:      "TokPunct",
-	TokSymbol:     "TokSymbol",
-	TokMayBeWord:  "TokMayBeWord",
-	TokWord:       "TokWord",
-	TokSentence:   "TokSentence",
+	TokOther:        "TokOther",
+	TokSpace:        "TokSpace",
+	TokLetter:       "TokLetter",
+	TokNumber:       "TokLetter",
+	TokMayBeTerm:    "TokMayBeTerm",
+	TokTerm:         "TokTerm",
+	TokPause:        "TokPause",
+	TokParenOpen:    "TokParenOpen",
+	TokParenClose:   "TokParenClose",
+	TokBracketOpen:  "TokBracketOpen",
+	TokBracketClose: "TokBracketClose",
+	TokBraceOpen:    "TokBraceOpen",
+	TokBraceClose:   "TokBraceClose",
+	TokPunct:        "TokPunct",
+	TokSymbol:       "TokSymbol",
+	TokMayBeWord:    "TokMayBeWord",
+	TokWord:         "TokWord",
+	TokSentence:     "TokSentence",
 }
 
 //
@@ -60,17 +70,36 @@ func TypeOfRune(r rune) TokenType {
 	case uni.IsNumber(r):
 		return TokNumber
 
-	case r == '.', r == '!', r == '?':
+	case r == '!', r == '?',
+		r == '\u3002', // Ideographic full stop
+		r == '\uff01', // Full width exclamation mark
+		r == '\uff1f': // Full width question mark
 		return TokTerm
+
+	case r == '.',
+		r == '\uff0e': // Full width full stop
+		return TokMayBeTerm
 
 	case r == ',', r == ':', r == ';':
 		return TokPause
 
-	case r == '(', r == '[', r == '{':
-		return TokGroupOpen
+	case r == '(':
+		return TokParenOpen
 
-	case r == ')', r == ']', r == '}':
-		return TokGroupClose
+	case r == ')':
+		return TokParenClose
+
+	case r == '[':
+		return TokBracketOpen
+
+	case r == ']':
+		return TokBracketClose
+
+	case r == '{':
+		return TokBraceOpen
+
+	case r == '}':
+		return TokBraceClose
 
 	case uni.IsPunct(r):
 		return TokPunct

@@ -106,7 +106,7 @@ func (si *SentenceIterator) MoveNext() error {
 				}
 			}
 
-		case TokTerm: // TODO(js): Handle 'Mr.'/'etc.'/...
+		case TokTerm, TokMayBeTerm: // TODO(js): Handle 'Mr.'/'etc.'/...
 			si.inTerm = true
 			si.inTermSp = false
 			si.buf += t.text

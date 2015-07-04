@@ -77,7 +77,13 @@ func (ti *TextTokenIterator) MoveNext() error {
 	for r, n, err := rd.ReadRune(); err == nil; r, n, err = rd.ReadRune() {
 		tt := TypeOfRune(r)
 		switch tt {
-		case TokTerm, TokPause, TokGroupOpen, TokGroupClose, TokPunct, TokSymbol, TokSpace:
+		case TokTerm, TokMayBeTerm, TokPause,
+			TokParenOpen, TokParenClose,
+			TokBracketOpen, TokBracketClose,
+			TokBraceOpen, TokBraceClose,
+			TokPunct,
+			TokSymbol,
+			TokSpace:
 			{
 				if ti.buf.Len() > 0 {
 					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1, TokMayBeWord}
