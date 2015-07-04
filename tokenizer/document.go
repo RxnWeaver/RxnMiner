@@ -13,6 +13,7 @@ import (
 // them as well.
 type Document struct {
 	id     string // Must be unique within a run
+	isTech bool   // Is this a technical document?
 	input  map[string]string
 	tokens map[string][]*TextToken
 	words  map[string][]*Word
@@ -38,6 +39,21 @@ func NewDocument(id string) (*Document, error) {
 	d.annos = make(map[string][]*Annotation, 2)
 	d.sents = make(map[string][]*Sentence, 2)
 
+	return d, nil
+}
+
+// NewTechnicalDocument creates and initialises a document of
+// technical nature, with the given identifier.
+//
+// It holds information about its sections.  It also holds information
+// of their constituent tokens, words, sentences and annotations.
+func NewTechnicalDocument(id string) (*Document, error) {
+	d, err := NewDocument(id)
+	if err != nil {
+		return nil, err
+	}
+
+	d.isTech = true
 	return d, nil
 }
 

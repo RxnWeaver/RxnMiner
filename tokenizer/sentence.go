@@ -57,6 +57,7 @@ func (s *Sentence) EndToken() int {
 // underlying text tokens.
 type SentenceIterator struct {
 	toks     []*TextToken
+	isTech   bool
 	cs       *Sentence
 	idx      int
 	idxTerm  int
@@ -70,6 +71,15 @@ type SentenceIterator struct {
 func NewSentenceIterator(toks []*TextToken) *SentenceIterator {
 	si := &SentenceIterator{}
 	si.toks = toks
+	return si
+}
+
+// NewTechnicalSentenceIterator creates and initialises a sentence
+// iterator in technical mode, over the given text tokens.
+func NewTechnicalSentenceIterator(toks []*TextToken) *SentenceIterator {
+	si := &SentenceIterator{}
+	si.toks = toks
+	si.isTech = true
 	return si
 }
 
