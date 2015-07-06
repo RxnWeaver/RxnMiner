@@ -232,20 +232,33 @@ func (si *SentenceIterator) MoveNext() error {
 
 		default:
 			{
-				if si.inTermSpc {
-					var r rune
-					for _, r = range t.text {
-						break
+				switch {
+				case si.inTerm:
+					{
+						if t.ttype == TokSquote || t.ttype == TokDquote ||
+							t.ttype == TokFinQuote {
+							commonProc(true)
+							si.idx = end + 1
+							return nil
+						}
 					}
-					if unicode.IsUpper(r) ||
-						t.ttype == TokSquote || t.ttype == TokDquote {
-						commonProc(false)
-						si.idx = end
-						return nil
-					} else {
-						if end > si.idxTerm {
-							for i := si.idxTerm + 1; i < end; i++ {
-								si.buf += si.toks[i].Text()
+
+				case si.inTermSpc:
+					{
+						var r rune
+						for _, r = range t.text {
+							break
+						}
+						if unicode.IsUpper(r) || t.ttype == TokSquote ||
+							t.ttype == TokDquote || t.ttype == TokIniQuote {
+							commonProc(false)
+							si.idx = end
+							return nil
+						} else {
+							if end > si.idxTerm {
+								for i := si.idxTerm + 1; i < end; i++ {
+									si.buf += si.toks[i].Text()
+								}
 							}
 						}
 					}
