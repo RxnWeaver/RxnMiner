@@ -81,6 +81,7 @@ func (ti *TextTokenIterator) MoveNext() error {
 			TokParenOpen, TokParenClose,
 			TokBracketOpen, TokBracketClose,
 			TokBraceOpen, TokBraceClose,
+			TokSquote, TokDquote,
 			TokPunct,
 			TokSymbol,
 			TokSpace:

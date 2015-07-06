@@ -27,6 +27,8 @@ const (
 	TokBracketClose
 	TokBraceOpen
 	TokBraceClose
+	TokSquote
+	TokDquote
 	TokPunct
 	TokSymbol
 
@@ -50,6 +52,8 @@ var TtDescriptions map[TokenType]string = map[TokenType]string{
 	TokBracketClose: "TokBracketClose",
 	TokBraceOpen:    "TokBraceOpen",
 	TokBraceClose:   "TokBraceClose",
+	TokSquote:       "TokSquote",
+	TokDquote:       "TokDquote",
 	TokPunct:        "TokPunct",
 	TokSymbol:       "TokSymbol",
 	TokMayBeWord:    "TokMayBeWord",
@@ -100,6 +104,12 @@ func TypeOfRune(r rune) TokenType {
 
 	case r == '}':
 		return TokBraceClose
+
+	case r == '\'':
+		return TokSquote
+
+	case r == '"':
+		return TokDquote
 
 	case uni.IsPunct(r):
 		return TokPunct
