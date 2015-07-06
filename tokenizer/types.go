@@ -29,6 +29,8 @@ const (
 	TokBraceClose
 	TokSquote
 	TokDquote
+	TokIniQuote
+	TokFinQuote
 	TokPunct
 	TokSymbol
 
@@ -54,6 +56,8 @@ var TtDescriptions map[TokenType]string = map[TokenType]string{
 	TokBraceClose:   "TokBraceClose",
 	TokSquote:       "TokSquote",
 	TokDquote:       "TokDquote",
+	TokIniQuote:     "TokIniQuote",
+	TokFinQuote:     "TokFinQuote",
 	TokPunct:        "TokPunct",
 	TokSymbol:       "TokSymbol",
 	TokMayBeWord:    "TokMayBeWord",
@@ -110,6 +114,12 @@ func TypeOfRune(r rune) TokenType {
 
 	case r == '"':
 		return TokDquote
+
+	case uni.Is(uni.Pi, r):
+		return TokIniQuote
+
+	case uni.Is(uni.Pf, r):
+		return TokFinQuote
 
 	case uni.IsPunct(r):
 		return TokPunct
