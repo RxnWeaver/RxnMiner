@@ -105,10 +105,14 @@ func (si *SentenceIterator) MoveNext() error {
 	begin, end := si.idx, si.idx
 	size := len(si.toks)
 
-	commonProc := func() {
+	commonProc := func(useEnd bool) {
+		eend := si.idxTerm
+		if useEnd {
+			eend = end - 1
+		}
 		si.cs = newSentence(si.buf,
-			si.toks[begin].Begin(), si.toks[si.idxTerm].End(),
-			begin, si.idxTerm)
+			si.toks[begin].Begin(), si.toks[eend].End(),
+			begin, eend)
 		si.buf = ""
 		si.inTerm = false
 		si.inTermSpc = false
@@ -122,15 +126,17 @@ func (si *SentenceIterator) MoveNext() error {
 		case TokSpace:
 			{
 				switch {
-				case si.inTerm, si.inMayBeTerm:
+				case si.inTerm:
 					si.inTerm = false
-					si.inMayBeTerm = false
+					si.inTermSpc = true
+					end++
+
+				case si.inMayBeTerm:
 					si.inTermSpc = true
 					end++
 
 				case si.inTermSpc:
 					end++
-					begin = end
 
 				default:
 					si.buf += t.text
@@ -140,23 +146,32 @@ func (si *SentenceIterator) MoveNext() error {
 
 		case TokTerm, TokMayBeTerm:
 			{
-				var prev string
-				if end-1 >= 0 {
-					prevt := si.toks[end-1]
-					prev = strings.ToLower(prevt.text)
+				pt := si.prevNonSpaceToken(end)
+				if pt != -1 {
+					prevt := si.toks[pt]
 					if prevt.ttype == TokSymbol || prevt.ttype == TokPunct {
 						si.inTerm = false
 						si.inMayBeTerm = true
 					} else {
+						prev := strings.ToLower(prevt.text)
 						if _, ok := NonTermAbbrevs[prev]; ok {
 							si.inTerm = false
-							si.inMayBeTerm = true
+							si.inMayBeTerm = false
+						} else if _, ok := MayBeTermAbbrevs[prev]; ok {
+							if prev == "g" {
+								si.handleEg(pt)
+							} else {
+								si.inTerm = false
+								si.inMayBeTerm = true
+							}
 						} else {
 							si.inTerm = true
+							si.inMayBeTerm = false
 						}
 					}
 				} else {
 					si.inTerm = false
+					si.inMayBeTerm = false
 				}
 				si.inTermSpc = false
 				si.buf += t.text
@@ -167,7 +182,7 @@ func (si *SentenceIterator) MoveNext() error {
 		case TokParenOpen, TokBracketOpen, TokBraceOpen:
 			si.grpStack = append(si.grpStack, groupIndex{end, t.ttype})
 			if si.inTerm || si.inTermSpc {
-				commonProc()
+				commonProc(false)
 				si.idx = end
 				return nil
 			}
@@ -205,7 +220,7 @@ func (si *SentenceIterator) MoveNext() error {
 								break
 							}
 							if unicode.IsUpper(r) {
-								commonProc()
+								commonProc(false)
 								si.idx = end + 1
 								return nil
 							}
@@ -222,8 +237,9 @@ func (si *SentenceIterator) MoveNext() error {
 					for _, r = range t.text {
 						break
 					}
-					if unicode.IsUpper(r) {
-						commonProc()
+					if unicode.IsUpper(r) ||
+						t.ttype == TokSquote || t.ttype == TokDquote {
+						commonProc(false)
 						si.idx = end
 						return nil
 					} else {
@@ -255,7 +271,7 @@ func (si *SentenceIterator) MoveNext() error {
 			}
 		}
 		if !skip {
-			commonProc()
+			commonProc(true)
 			si.idx = end
 			return nil
 		}
@@ -276,4 +292,43 @@ func (si *SentenceIterator) nextNonSpaceToken(idx int) int {
 	}
 
 	return -1
+}
+
+// prevNonSpaceToken answers the index of the first token before that
+// at the given index that represents a non-space token.  If none such
+// exists, it answers -1.
+func (si *SentenceIterator) prevNonSpaceToken(idx int) int {
+	for i := idx - 1; i >= 0; i-- {
+		if si.toks[i].ttype != TokSpace {
+			return i
+		}
+	}
+
+	return -1
+}
+
+// handleEg checks to see if the current sequence (standing on 'g') is
+// some form of "e.g" or "eg", spaces removed.
+func (si *SentenceIterator) handleEg(pt int) {
+	pt2 := si.prevNonSpaceToken(pt)
+	if pt2 != -1 {
+		if si.toks[pt2].text == "." {
+			pt3 := si.prevNonSpaceToken(pt2)
+			if pt3 != -1 {
+				if strings.ToLower(si.toks[pt3].text) == "e" {
+					si.inTerm = false
+					si.inMayBeTerm = false
+				}
+			}
+		} else if si.toks[pt2].text == "e" {
+			si.inTerm = false
+			si.inMayBeTerm = false
+		} else {
+			si.inTerm = true
+			si.inMayBeTerm = false
+		}
+	} else {
+		si.inTerm = true
+		si.inMayBeTerm = false
+	}
 }
