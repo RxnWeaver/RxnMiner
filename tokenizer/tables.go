@@ -1,3 +1,8 @@
+// Copyright (c) 2015 RxnWeaver
+//
+// Part of the RxnWeaver suite of projects.  See README.md and LICENSE
+// for more details.
+
 package tokenizer
 
 // NonTermAbbrevs lists the common abbreviations that could end with a
