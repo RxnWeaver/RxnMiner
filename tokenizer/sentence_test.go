@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"testing"
 )
@@ -31,7 +30,7 @@ func TestPatent7k(t *testing.T) {
 	fn2 := "testdata/patent_7k_ref.txt"
 	fn3 := "testdata/patent_7k_output.txt"
 
-	runPatent7k(fn1, fn2, fn3, t)
+	runPatent7k(fn1, fn3, t)
 
 	//
 
@@ -49,7 +48,7 @@ func TestPatent7k(t *testing.T) {
 
 //
 
-func runPatent7k(fn1, fn2, fn3 string, t *testing.T) {
+func runPatent7k(fn1, fn3 string, t *testing.T) {
 	f1, err := os.Open(fn1)
 	if err != nil {
 		t.Fatalf("!! Unable to read file : %s\n", fn1)
@@ -60,12 +59,6 @@ func runPatent7k(fn1, fn2, fn3 string, t *testing.T) {
 	}
 	defer gr.Close()
 
-	f2, err := os.Open(fn2)
-	if err != nil {
-		t.Fatalf("!! Unable to read file : %s\n", fn2)
-	}
-	defer f2.Close()
-
 	f3, err := os.Create(fn3)
 	if err != nil {
 		t.Fatalf("!! Unable to read file : %s\n", fn3)
@@ -73,46 +66,15 @@ func runPatent7k(fn1, fn2, fn3 string, t *testing.T) {
 	defer f3.Close()
 
 	bf1 := bufio.NewReader(gr)
-	bf2 := bufio.NewReader(f2)
 	bf3 := bufio.NewWriter(f3)
 
-	offs := offsets(bf2)
-	tokenize(bf1, bf3, offs)
+	tokenize(bf1, bf3)
 	_ = bf3.Flush()
 }
 
 //
 
-func offsets(bf *bufio.Reader) map[string]*DocOffsets {
-	doffs := make(map[string]*DocOffsets, 7000)
-
-	for s, err := bf.ReadString('\n'); err == nil; s, err = bf.ReadString('\n') {
-		fs := strings.Split(s, "\t")
-		d := &DocOffsets{Id: fs[0]}
-		fs1 := strings.Split(fs[1], ",")
-		for _, s2 := range fs1 {
-			s3 := strings.Split(s2, ":")
-			i, _ := strconv.Atoi(s3[0])
-			j, _ := strconv.Atoi(s3[1])
-			d.TOffs = append(d.TOffs, Offsets{i, j})
-		}
-		fs2 := strings.Split(fs[2], ",")
-		for _, s2 := range fs2 {
-			s3 := strings.Split(s2, ":")
-			i, _ := strconv.Atoi(s3[0])
-			j, _ := strconv.Atoi(s3[1])
-			d.AOffs = append(d.AOffs, Offsets{i, j})
-		}
-
-		doffs[d.Id] = d
-	}
-
-	return doffs
-}
-
-//
-
-func tokenize(bf2 *bufio.Reader, bf3 *bufio.Writer, offs map[string]*DocOffsets) {
+func tokenize(bf2 *bufio.Reader, bf3 *bufio.Writer) {
 	for s, err := bf2.ReadString('\n'); err == nil; s, err = bf2.ReadString('\n') {
 		fs := strings.Split(s, "\t")
 
