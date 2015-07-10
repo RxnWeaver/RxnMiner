@@ -80,7 +80,7 @@ func (ti *TextTokenIterator) MoveNext() error {
 	begin, end := ti.idx, ti.idx
 
 	for r, n, err := rd.ReadRune(); err == nil; r, n, err = rd.ReadRune() {
-		tt := TypeOfRune(r)
+		tt := RuneType(r)
 		switch tt {
 		case TokTerm, TokMayBeTerm, TokPause,
 			TokParenOpen, TokParenClose,
@@ -95,14 +95,14 @@ func (ti *TextTokenIterator) MoveNext() error {
 					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1, TokMayBeWord}
 					ti.buf.Reset()
 					ti.idx = end
-					return err
+					return nil
 				}
 
 				begin = end
 				end = begin + n
 				ti.ct = &TextToken{string(r), begin, end - 1, tt}
 				ti.idx = end
-				return err
+				return nil
 			}
 
 		case TokNumber:
@@ -111,7 +111,7 @@ func (ti *TextTokenIterator) MoveNext() error {
 					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1, TokMayBeWord}
 					ti.buf.Reset()
 					ti.idx = end
-					return err
+					return nil
 				} else {
 					inNum = true
 					end += n
@@ -125,7 +125,7 @@ func (ti *TextTokenIterator) MoveNext() error {
 					ti.ct = &TextToken{string(ti.in[begin:end]), begin, end - 1, TokMayBeWord}
 					ti.buf.Reset()
 					ti.idx = end
-					return err
+					return nil
 				} else {
 					end += n
 				}
