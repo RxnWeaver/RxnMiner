@@ -120,23 +120,21 @@ func (d *Document) AssembleSentences() {
 }
 
 // Annotate records the given annotation against the applicable
-// sequence of tokens in the appropriate section of the document.  It
-// creates and stores a `Word` corresponding to the text in the
-// annotation.
-func (d *Document) Annotate(a *Annotation) error {
+// sequence of tokens in the appropriate section of the document.
+//
+// It creates or updates a `Word` corresponding to the text in the
+// annotation.  The annotation can be for one of: (a) part of speech
+// ("POS"), (b) lemma ("LEM") or (c) class/category ("CLS").
+func (d *Document) Annotate(a *Annotation, what string) error {
 	toks, ok := d.tokens[a.Section]
 	if !ok {
 		return fmt.Errorf("Annotation for unrecognised section : %s", a.Section)
 	}
 
-	w, err := d.wordForAnnotation(a, toks)
+	_, err := d.annotateWord(a, what, toks)
 	if err != nil {
 		return err
 	}
-
-	words := d.words[a.Section]
-	words = append(words, w)
-	d.words[a.Section] = words
 
 	annos := d.annos[a.Section]
 	annos = append(annos, a)
@@ -147,7 +145,7 @@ func (d *Document) Annotate(a *Annotation) error {
 
 //
 
-func (d *Document) wordForAnnotation(a *Annotation, toks []*TextToken) (*Word, error) {
+func (d *Document) annotateWord(a *Annotation, what string, toks []*TextToken) (*Word, error) {
 	bidx := -1
 	eidx := -1
 	for i, t := range toks {
@@ -170,8 +168,36 @@ func (d *Document) wordForAnnotation(a *Annotation, toks []*TextToken) (*Word, e
 		return nil, fmt.Errorf("Annotation could not be matched : %v", *a)
 	}
 
-	w := newWord(a.Entity, a.Begin, a.End)
-	w.etype = a.Type
+	var w *Word
+	found := false
+	words := d.words[a.Section]
+	for _, tw := range words {
+		if tw.Begin() == a.Begin && tw.End() == a.End {
+			w = tw
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		w = newWord(a.Entity, a.Begin, a.End)
+	}
+	switch what {
+	case "POS":
+		w.pos = a.Property
+	case "LEM":
+		w.lemma = a.Property
+	case "CLS":
+		w.class = a.Property
+	default:
+		return nil, fmt.Errorf("Unknown annotation type : %s", what)
+	}
+
+	if !found {
+		words = append(words, w)
+		d.words[a.Section] = words
+	}
+
 	return w, nil
 }
 
