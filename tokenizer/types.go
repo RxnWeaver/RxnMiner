@@ -72,7 +72,7 @@ var TtDescriptions map[TokenType]string = map[TokenType]string{
 
 //
 
-func TypeOfRune(r rune) TokenType {
+func RuneType(r rune) TokenType {
 	switch {
 	case uni.IsSpace(r):
 		return TokSpace

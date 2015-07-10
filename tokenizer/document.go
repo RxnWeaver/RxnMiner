@@ -103,6 +103,22 @@ func (d *Document) Tokenize() {
 	}
 }
 
+// AssembleSentences builds sentences the text tokens obtained as a
+// result of tokenization of the sections in the document.
+func (d *Document) AssembleSentences() {
+	var si *SentenceIterator
+	var err error
+
+	for sec, toks := range d.tokens {
+		si = NewSentenceIterator(toks)
+		var sents []*Sentence
+		for err = si.MoveNext(); err == nil; err = si.MoveNext() {
+			sents = append(sents, si.Item())
+		}
+		d.sents[sec] = sents
+	}
+}
+
 // Annotate records the given annotation against the applicable
 // sequence of tokens in the appropriate section of the document.  It
 // creates and stores a `Word` corresponding to the text in the
@@ -159,8 +175,8 @@ func (d *Document) wordForAnnotation(a *Annotation, toks []*TextToken) (*Word, e
 	return w, nil
 }
 
-// TokensInSection answers any recognised tokens in the given section.
-func (d *Document) TokensInSection(sec string) []*TextToken {
+// SectionTokens answers recognised tokens in the given section.
+func (d *Document) SectionTokens(sec string) []*TextToken {
 	if v, ok := d.tokens[sec]; ok {
 		return v
 	}
@@ -178,8 +194,27 @@ func (d *Document) SectionTokenCount(sec string) (int, error) {
 	return -1, fmt.Errorf("Unknown section : %s", sec)
 }
 
-// WordsInSection answers any recognised words in the given section.
-func (d *Document) WordsInSection(sec string) []*Word {
+// SectionSentences answers assembled sentences in the given section.
+func (d *Document) SectionSentences(sec string) []*Sentence {
+	if v, ok := d.sents[sec]; ok {
+		return v
+	}
+
+	return nil
+}
+
+// SectionSentenceCount answers the number of assembled sentences in
+// the given section.
+func (d *Document) SectionSentenceCount(sec string) (int, error) {
+	if v, ok := d.sents[sec]; ok {
+		return len(v), nil
+	}
+
+	return -1, fmt.Errorf("Unknown section : %s", sec)
+}
+
+// SectionWords answers recognised words in the given section.
+func (d *Document) SectionWords(sec string) []*Word {
 	if v, ok := d.words[sec]; ok {
 		return v
 	}
@@ -197,9 +232,9 @@ func (d *Document) SectionWordCount(sec string) (int, error) {
 	return -1, fmt.Errorf("Unknown section : %s", sec)
 }
 
-// AnnotationsForSection answers the registered annotations for the
-// given section.
-func (d *Document) AnnotationsForSection(sec string) []*Annotation {
+// SectionAnnotations answers registered annotations for the given
+// section.
+func (d *Document) SectionAnnotations(sec string) []*Annotation {
 	if v, ok := d.annos[sec]; ok {
 		return v
 	}

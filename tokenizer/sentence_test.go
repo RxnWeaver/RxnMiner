@@ -19,11 +19,11 @@ import (
 
 type Offsets struct {
 	Begin int
-	End int
+	End   int
 }
 
 type DocOffsets struct {
-	Id string
+	Id    string
 	TOffs []Offsets
 	AOffs []Offsets
 }
@@ -87,22 +87,19 @@ func tokenize(bf2 *bufio.Reader, bf3 *bufio.Writer) {
 		doc.SetInput("T", fs[1])
 		doc.SetInput("A", fs[2])
 		doc.Tokenize()
+		doc.AssembleSentences()
 
-		var sents []*Sentence
 		var soffs []string
-		si := NewSentenceIterator(doc.TokensInSection("T"))
-		for err = si.MoveNext(); err == nil; err = si.MoveNext() {
-			sents = append(sents, si.Item())
-			soffs = append(soffs, fmt.Sprintf("%d:%d", si.Item().Begin(), si.Item().End()))
+		sents := doc.SectionSentences("T")
+		for _, sent := range sents {
+			soffs = append(soffs, fmt.Sprintf("%d:%d", sent.Begin(), sent.End()))
 		}
 		bf3.WriteString(fmt.Sprintf("%s\t%s\t", fs[0], strings.Join(soffs, ",")))
 
-		sents = sents[:0]
 		soffs = soffs[:0]
-		si = NewSentenceIterator(doc.TokensInSection("A"))
-		for err = si.MoveNext(); err == nil; err = si.MoveNext() {
-			sents = append(sents, si.Item())
-			soffs = append(soffs, fmt.Sprintf("%d:%d", si.Item().Begin(), si.Item().End()))
+		sents = doc.SectionSentences("A")
+		for _, sent := range sents {
+			soffs = append(soffs, fmt.Sprintf("%d:%d", sent.Begin(), sent.End()))
 		}
 		bf3.WriteString(fmt.Sprintf("%s\n", strings.Join(soffs, ",")))
 	}
