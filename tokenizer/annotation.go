@@ -16,15 +16,15 @@ import (
 //
 // Each annotated word belongs to exactly one input document, and
 // exactly one identified section within that (title, abstract, etc.).
-// The annotation also holds information about the entity type of the
-// word.  Annotations are used for training the tools.
+// The annotation also holds information about a particular property
+// of the word.  Annotations are used for training the tools.
 type Annotation struct {
 	DocumentId string
 	Section    string
 	Begin      int
 	End        int
 	Entity     string
-	Type       EntityType
+	Property   string
 }
 
 // NewAnnotation creates and initialises a new annotation for the
@@ -60,11 +60,7 @@ func NewAnnotation(in string) (*Annotation, error) {
 	}
 	a.Entity = fields[4]
 
-	if t, ok := EtDescriptionsInv[fields[5]]; ok {
-		a.Type = t
-	} else {
-		a.Type = EntOther
-	}
+	a.Property = fields[5]
 
 	return a, nil
 }
