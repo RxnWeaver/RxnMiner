@@ -1,18 +1,18 @@
-### tokenize -- A text tokenizer and sentence assembler
-`tokenize` is a small Go package for:
+### tokenizer -- A text tokenizer and sentence assembler
+`tokenizer` is a small Go package for:
 
 - splitting input text into quasi-atomic tokens,
 - sentence assembly from those tokens, and
 - annotate a set of one or more (consecutive) token(s) as words or phrases.
 
-Rather than split the input text into sentences first, and tokenize the sentences next, `tokenize` *assembles* them from tokens.  For the purposes of **RxnMiner** (the containing project of this package) - which processes technical text - the conventional approach produced too many incorrect sentences, leading to mis-applied annotations downstream.  Hence this inverted design.
+Rather than split the input text into sentences first, and tokenize the sentences next, `tokenizer` *assembles* them from tokens.  For the purposes of **RxnMiner** (the containing project of this package) - which processes technical text - the conventional approach produced too many incorrect sentences, leading to mis-applied annotations downstream.  Hence this inverted design.
 
 ### Installation
 
 Preferred:
 
 ```sh
-go get -u 'github.com/RxnWeaver/RxnMiner/tokenize'
+go get -u 'github.com/RxnWeaver/RxnMiner/tokenizer'
 cd $GOPATH/src/github.com/RxnWeaver/RxnMiner
 git checkout <tag>
 go test -v ./...
@@ -24,7 +24,7 @@ where `<tag>` represents the most-recently tagged release.
 For the adventurous:
 
 ```sh
-go get -u 'github.com/RxnWeaver/RxnMiner/tokenize'
+go get -u 'github.com/RxnWeaver/RxnMiner/tokenizer'
 ```
 
 ### Status
