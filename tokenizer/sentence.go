@@ -98,14 +98,22 @@ func NewTechnicalSentenceIterator(toks []*TextToken) *SentenceIterator {
 	return si
 }
 
-// Item answers the current sentence.
+// Item answers the current sentence.  This has no side effects, and
+// can be invoked any number of times.
 func (si *SentenceIterator) Item() *Sentence {
 	return si.cs
 }
 
-// MoveNext detects the next sentence formed from the given input
-// tokens, should one be available.  Otherwise, it answers an error
-// describing the problem.
+// MoveNext assembles the next sentence from the given input tokens.
+//
+// It begins with the current running token index (which could be at
+// the beginning of the input slice of tokens), and continues until it
+// can logically complete a sentence.  Should it not be able to
+// complete one such, it treats all remaining input tokens as
+// constituting a single sentence.
+//
+// The return value is either `nil` (more sentences may be available)
+// or `io.EOF` (no more sentences).
 func (si *SentenceIterator) MoveNext() error {
 	begin, end := si.idx, si.idx
 	size := len(si.toks)
@@ -259,11 +267,10 @@ func (si *SentenceIterator) MoveNext() error {
 							commonProc(false)
 							si.idx = end
 							return nil
-						} else {
-							if end > si.idxTerm {
-								for i := si.idxTerm + 1; i < end; i++ {
-									si.buf += si.toks[i].Text()
-								}
+						}
+						if end > si.idxTerm {
+							for i := si.idxTerm + 1; i < end; i++ {
+								si.buf += si.toks[i].Text()
 							}
 						}
 					}

@@ -66,13 +66,23 @@ func NewTextTokenIteratorWithOffset(input string, n int) *TextTokenIterator {
 	return ti
 }
 
-// Item answers the current token.
+// Item answers the current token.  This has no side effects, and can
+// be invoked any number of times.
 func (ti *TextTokenIterator) Item() *TextToken {
 	return ti.ct
 }
 
 // MoveNext detects the next token in the input, should one be
-// available.  Otherwise, it answers an error describing the problem.
+// available.
+//
+// It begins with the current running byte offset (which could be the
+// beginning of the input string), and continues until it can
+// logically break on a token terminator.  Should it not be able to
+// find one such, it treats all remaining runes in the input string as
+// constituting a single token.
+//
+// The return value is either `nil` (more tokens may be available) or
+// `io.EOF` (no more tokens).
 func (ti *TextTokenIterator) MoveNext() error {
 	inStr := false
 	inNum := false
@@ -112,10 +122,9 @@ func (ti *TextTokenIterator) MoveNext() error {
 					ti.buf.Reset()
 					ti.idx = end
 					return nil
-				} else {
-					inNum = true
-					end += n
 				}
+				inNum = true
+				end += n
 				inStr = false
 			}
 
@@ -126,9 +135,8 @@ func (ti *TextTokenIterator) MoveNext() error {
 					ti.buf.Reset()
 					ti.idx = end
 					return nil
-				} else {
-					end += n
 				}
+				end += n
 				inStr = true
 				inNum = false
 			}
