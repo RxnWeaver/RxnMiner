@@ -14,11 +14,3 @@ type Token interface {
 	End() int
 	Type() TokenType
 }
-
-// TokenIterator helps in retrieving consecutive tokens.  Side effects
-// of the iteration happen in `MoveNext`.  Therefore, `Item` can be
-// called multiple times, should there be such a need.
-type TokenIterator interface {
-	MoveNext() error
-	Item() Token
-}
