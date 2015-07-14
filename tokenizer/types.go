@@ -20,6 +20,7 @@ const (
 	TokOther TokenType = iota
 
 	// Rune types
+
 	TokSpace
 	TokLetter
 	TokNumber
@@ -40,12 +41,14 @@ const (
 	TokSymbol
 
 	// Others
+
 	TokMayBeWord
 	TokWord
 	TokSentence
 )
 
-var TtDescriptions map[TokenType]string = map[TokenType]string{
+// TtDescriptions helps in printing token types.
+var TtDescriptions = map[TokenType]string{
 	TokOther:        "TokOther",
 	TokSpace:        "TokSpace",
 	TokLetter:       "TokLetter",
@@ -70,8 +73,7 @@ var TtDescriptions map[TokenType]string = map[TokenType]string{
 	TokSentence:     "TokSentence",
 }
 
-//
-
+// RuneType answers the token type of the given rune.
 func RuneType(r rune) TokenType {
 	switch {
 	case uni.IsSpace(r):

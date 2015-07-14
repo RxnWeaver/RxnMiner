@@ -8,7 +8,7 @@ package tokenizer
 // NonTermAbbrevs lists the common abbreviations that could end with a
 // full stop, but without ending the sentence.  The abbrevs are in
 // lowercase.
-var NonTermAbbrevs map[string]struct{} = map[string]struct{}{
+var NonTermAbbrevs = map[string]struct{}{
 	"viz": {},
 	"eg":  {},
 	"fig": {},
@@ -23,7 +23,7 @@ var NonTermAbbrevs map[string]struct{} = map[string]struct{}{
 // MayBeTermAbbrevs lists the common abbreviations that could end with
 // a full stop, possibly without ending the sentence.  The abbrevs are
 // in lowercase.
-var MayBeTermAbbrevs map[string]struct{} = map[string]struct{}{
+var MayBeTermAbbrevs = map[string]struct{}{
 	"etc": {},
 	"al":  {},
 	"e":   {},

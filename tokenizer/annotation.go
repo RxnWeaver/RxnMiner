@@ -19,7 +19,7 @@ import (
 // The annotation also holds information about a particular property
 // of the word.  Annotations are used for training the tools.
 type Annotation struct {
-	DocumentId string
+	DocumentID string
 	Section    string
 	Begin      int
 	End        int
@@ -45,7 +45,7 @@ func NewAnnotation(in string) (*Annotation, error) {
 	}
 
 	a := &Annotation{}
-	a.DocumentId = fields[0]
+	a.DocumentID = fields[0]
 	a.Section = fields[1]
 
 	if n, err := strconv.Atoi(fields[2]); err == nil {
