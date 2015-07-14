@@ -17,19 +17,6 @@ import (
 
 //
 
-type Offsets struct {
-	Begin int
-	End   int
-}
-
-type DocOffsets struct {
-	Id    string
-	TOffs []Offsets
-	AOffs []Offsets
-}
-
-//
-
 func TestPatent7k(t *testing.T) {
 	fn1 := "testdata/patent_7k_text.txt.gz"
 	fn2 := "testdata/patent_7k_ref.txt"
