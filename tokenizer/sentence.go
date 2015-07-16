@@ -159,9 +159,9 @@ func (si *SentenceIterator) MoveNext() error {
 
 		case TokTerm, TokMayBeTerm:
 			{
-				pt := si.prevNonSpaceToken(end)
-				if pt != -1 {
-					prevt := si.toks[pt]
+				pidx := si.prevNonSpaceToken(end)
+				if pidx != -1 {
+					prevt := si.toks[pidx]
 					if prevt.ttype == TokSymbol || prevt.ttype == TokPunct {
 						si.inTerm = false
 						si.inMayBeTerm = true
@@ -171,12 +171,10 @@ func (si *SentenceIterator) MoveNext() error {
 							si.inTerm = false
 							si.inMayBeTerm = false
 						} else if _, ok := MayBeTermAbbrevs[prev]; ok {
-							if prev == "g" {
-								si.handleEg(pt)
-							} else {
-								si.inTerm = false
-								si.inMayBeTerm = true
-							}
+							si.inTerm = false
+							si.inMayBeTerm = true
+						} else if grp, ok := MayBeTermGroupAbbrevs[prev]; ok {
+							si.handleGroupAbbrevs(pidx, grp)
 						} else {
 							si.inTerm = true
 							si.inMayBeTerm = false
@@ -332,26 +330,27 @@ func (si *SentenceIterator) prevNonSpaceToken(idx int) int {
 	return -1
 }
 
-// handleEg checks to see if the current sequence (standing on 'g') is
-// some form of "e.g" or "eg", spaces removed.
-func (si *SentenceIterator) handleEg(pt int) {
-	pt2 := si.prevNonSpaceToken(pt)
-	if pt2 != -1 {
+// handleGroupAbbrevs checks to see if the current token ends an
+// abbreviation sequence.  If so, it marks the state to be
+// non-terminating.
+func (si *SentenceIterator) handleGroupAbbrevs(pt int, grp []string) {
+	lgrp := len(grp)
+	gidx := 0
+	for pt2 := si.prevNonSpaceToken(pt); pt2 > -1; pt2 = si.prevNonSpaceToken(pt2) {
 		if si.toks[pt2].text == "." {
-			pt3 := si.prevNonSpaceToken(pt2)
-			if pt3 != -1 {
-				if strings.ToLower(si.toks[pt3].text) == "e" {
-					si.inTerm = false
-					si.inMayBeTerm = false
-				}
-			}
-		} else if si.toks[pt2].text == "e" {
-			si.inTerm = false
-			si.inMayBeTerm = false
-		} else {
-			si.inTerm = true
-			si.inMayBeTerm = false
+			continue
 		}
+		if strings.ToLower(si.toks[pt2].text) != grp[gidx] {
+			break
+		}
+		gidx++
+		if gidx >= lgrp {
+			break
+		}
+	}
+	if gidx == lgrp {
+		si.inTerm = false
+		si.inMayBeTerm = false
 	} else {
 		si.inTerm = true
 		si.inMayBeTerm = false
