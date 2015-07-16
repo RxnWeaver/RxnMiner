@@ -11,6 +11,7 @@ package tokenizer
 var NonTermAbbrevs = map[string]struct{}{
 	"viz": {},
 	"eg":  {},
+	"ex":  {},
 	"fig": {},
 	// Salutations
 	"mr":   {},
@@ -25,7 +26,12 @@ var NonTermAbbrevs = map[string]struct{}{
 // in lowercase.
 var MayBeTermAbbrevs = map[string]struct{}{
 	"etc": {},
-	"al":  {},
-	"e":   {},
-	"g":   {},
+}
+
+// MayBeTermGroupAbbrevs lists the common abbreviations that are
+// compound, i.e. they involve more than one token.  The table omits
+// any intervening period.  The abbrevs are in lowercase.
+var MayBeTermGroupAbbrevs = map[string][]string{
+	"e": {"i"},
+	"g": {"e"},
 }
